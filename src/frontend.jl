@@ -6,6 +6,9 @@ type Linear2DInterpolator
 	p::Vector{Int64}
 	iadj::Vector{Int64}
 	iend::Vector{Int64}
+	ier::Vector{Int64}      # Preallocate these three guys 
+	ist::Vector{Int64}      # to avoid repeated allocation
+	ztmp::Vector{Float64}  # 
 	function Linear2DInterpolator(x::Vector{Float64}, 
 								  y::Vector{Float64}, 
 								  z::Vector{Float64}; 
@@ -15,19 +18,37 @@ type Linear2DInterpolator
 		end
 		x, y, z, p = reordr!(x, y, z)
 		iadj, iend = trmesh(x, y)
-		new(x, y, z, p, iadj, iend)
+		new(x, y, z, p, iadj, iend, [3], [1], [0.0])
 	end
 end
 
-evaluate(linint::Linear2DInterpolator, xi::Vector, yi::Vector) =
-	evaluate!(linint, xi, yi, similar(xi))
+# pointwise evaluation. This does not allocate memory and should be fast.
+evaluate(linint::Linear2DInterpolator, px::Float64, py::Float64	) = 
+		intrc0!(px, py, linint.ztmp, linint.x, linint.y, linint.z, linint.iadj, 
+				linint.iend, linint.ier, linint.ist)
 
+# If znew is provided, then it is used to interpolate data, instead of using the original z data
+evaluate!(linint::Linear2DInterpolator, px::Float64, py::Float64, znew::Vector; permute::Bool=false) =
+	      intrc0!(px, py, linint.ztmp, linint.x, linint.y, 
+	      	      permute == true ? permute!(znew, linint.p) : znew, linint.iadj, 
+	      	      linint.iend, linint.ier, linint.ist)
+
+# evaluation for a vector of points. In place version.
 evaluate!(linint::Linear2DInterpolator, xi::Vector, yi::Vector, zi::Vector) =
-	intrc0!(xi, yi, zi, linint.x, linint.y, linint.z, linint.iadj, linint.iend)
+		  intrc0!(xi, yi, zi, linint.ztmp, linint.x, linint.y, linint.z, linint.iadj,
+		          linint.iend, linint.ier, linint.ist)
 
-# if z is provided, then it is used to interpolate data, instead of using the original z data
-evaluate!(linint::Linear2DInterpolator, xi::Vector, yi::Vector, zi::Vector, znew::Vector) =
-	intrc0!(xi, yi, zi, linint.x, linint.y, znew[linint.p], linint.iadj, linint.iend)
+# evaluation for a vector of points. Allocates memory.
+evaluate(linint::Linear2DInterpolator, xi::Vector, yi::Vector) =
+		 evaluate!(linint, xi, yi, similar(xi))
+
+# If znew is provided, then it is used to interpolate data, instead of using the original z data
+evaluate!(linint::Linear2DInterpolator, xi::Vector, yi::Vector, znew::Vector,  zi::Vector; permute::Bool=false) =
+	      intrc0!(xi, yi, zi, linint.ztmp, linint.x, linint.y, 
+		          permute == true ? permute!(znew, linint.p) : znew, linint.iadj, 
+		          linint.iend, linint.ier, linint.ist)
+
+
 
 # Cubic Clough-Tocher interpolator
 type Cubic2DInterpolator
@@ -38,6 +59,9 @@ type Cubic2DInterpolator
 	iadj::Vector{Int64}
 	iend::Vector{Int64}
 	zxzy::Matrix{Float64}
+	ier::Vector{Int64}      # Preallocate these three guys 
+	ist::Vector{Int64}      # to avoid repeated allocation
+	ztmp::Vector{Float64}  # 
 	function Cubic2DInterpolator(x::Vector{Float64}, 
 								 y::Vector{Float64}, 
 								 z::Vector{Float64}; 
@@ -50,16 +74,29 @@ type Cubic2DInterpolator
 		x, y, z, p = reordr!(x, y, z)
 		iadj, iend = trmesh(x, y)
 		zxzy = gradg(x, y, z, iadj, iend, nit, eps) 
-		new(x, y, z, iadj, iend, zxzy, p)
+		new(x, y, z, p, iadj, iend, zxzy, [3], [1], [0.0])
 	end
 end
 
-evaluate(cubint::Cubic2DInterpolator, xi::Vector, yi::Vector) =
-	evaluate!(cubint, xi, yi, similar(xi))
+# pointwise evaluation. This does not allocate memory and should be fast.
+evaluate(cubint::Cubic2DInterpolator, px::Float64, py::Float64	) = 
+		intrc1!(px, py, cubint.ztmp, cubint.x, cubint.y, cubint.z, cubint.iadj, 
+				cubint.iend, cubint.ier, cubint.ist, cubint.zxzy)
 
+# If znew is provided, then it is used to interpolate data, instead of using the original z data
+evaluate!(cubint::Cubic2DInterpolator, px::Float64, py::Float64, znew::Vector; permute::Bool=false) =
+		  intrc1!(px, py, cubint.ztmp, cubint.x, cubint.y, 
+		          permute == true ? permute!(znew, cubint.p) : znew, cubint.iadj, 
+		          cubint.iend, cubint.ier, cubint.ist, cubint.zxzy)
+
+# evaluation for a vector of points. In place version.
 evaluate!(cubint::Cubic2DInterpolator, xi::Vector, yi::Vector, zi::Vector) =
-	intrc1!(xi, yi, zi, cubint.x, cubint.y, cubint.z, cubint.iadj, cubint.iend, cubint.zxzy)
+		  intrc1!(xi, yi, zi, cubint.ztmp, cubint.x, cubint.y, cubint.z, cubint.iadj,
+		          cubint.iend, cubint.ier, cubint.ist, cubint.zxzy)
 
-# if z is provided, then it is used to interpolate data, instead of using the original z data
-evaluate!(cubint::Cubic2DInterpolator, xi::Vector, yi::Vector, zi::Vector, znew::Vector) =
-	intrc1!(xi, yi, zi, cubint.x, cubint.y, cubint.z[cubint.p], cubint.iadj, cubint.iend, cubint.zxzy)
+# evaluation for a vector of points. Allocates memory.
+evaluate(cubint::Cubic2DInterpolator, xi::Vector, yi::Vector) =
+		 evaluate!(cubint, xi, yi, similar(xi))
+
+# there is no equivalent of passing a znew vector to the cubic because we 
+# would have to recompute the gradients

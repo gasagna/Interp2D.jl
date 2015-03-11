@@ -36,10 +36,3 @@ zy = vec(zxzy[2, :])
 @test norm(zy - 3.0)/norm(zy) < 1e-5
 @test_throws ErrorException gradg(x, y, z, iadj, iend, 1, -2.0)
 
-
-# ~~~ Test interp ~~~
-@test norm(intrc1!([0.11], [0.11], [0.0], x, y, z, iadj, iend, zxzy) - 0.11*2 - 0.11*3) < 1e-6
-@test norm(intrc1!([0.11], [0.22], [0.0], x, y, z, iadj, iend, zxzy) - 0.11*2 - 0.22*3) < 1e-6
-@test_throws ErrorException intrc1!([0.11], [0.11], [0.0], x[1:2], y, z, iadj, iend, zxzy)
-@test_throws ErrorException intrc1!([0.11], [0.11], [0.0], x, y, z, iadj, iend, zxzy[:, 1:2])
-
