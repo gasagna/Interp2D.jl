@@ -119,7 +119,7 @@ function intrc1!(xi::Float64, yi::Float64,
 		  Ptr{Float64}, # pz
 		  Ptr{Int64}),  # ier
 		  &(int64(length(x))), &xi, &yi, x, y, z, iadj, iend, &int64(1), zxzy, ist, ztmp, ier)
-	ier[1] ==  1 && warn("extrapolating out of convex hull of data")
+	#ier[1] ==  1 && warn("extrapolating out of convex hull of data")
 	ier[1] == -1 && error("N, iflag orr ist out of range")
 	ier[1] == -2 && error("nodes are collinear")
 	ztmp[1]
@@ -162,7 +162,7 @@ function intrc0!(xi::Float64, yi::Float64,
 		  Ptr{Float64}, # pztmp
 		  Ptr{Int64}),  # ier
 		  &(int64(length(x))), &xi, &yi, x, y, z, iadj, iend, ist, ztmp, ier)
-	ier[1] ==  1 && warn("extrapolating out of convex hull of data")
+	#ier[1] ==  1 && warn("extrapolating out of convex hull of data")
 	ier[1] == -1 && error("N, iflag orr ist out of range")
 	ier[1] == -2 && error("nodes are collinear")
 	return ztmp[1]

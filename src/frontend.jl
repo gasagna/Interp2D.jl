@@ -43,7 +43,7 @@ evaluate(linint::Linear2DInterpolator, xi::Vector, yi::Vector) =
 		 evaluate!(linint, xi, yi, similar(xi))
 
 # If znew is provided, then it is used to interpolate data, instead of using the original z data
-evaluate!(linint::Linear2DInterpolator, xi::Vector, yi::Vector, znew::Vector,  zi::Vector; permute::Bool=false) =
+evaluate!(linint::Linear2DInterpolator, xi::Vector, yi::Vector, znew::Vector, zi::Vector; permute::Bool=false) =
 	      intrc0!(xi, yi, zi, linint.ztmp, linint.x, linint.y, 
 		          permute == true ? permute!(znew, linint.p) : znew, linint.iadj, 
 		          linint.iend, linint.ier, linint.ist)
