@@ -1,7 +1,7 @@
 function reordr!(x::Vector{Float64}, y::Vector{Float64}, z::Vector{Float64})
 	length(x) == length(y) == length(z) || error("input vectors must be same size")
-	N = int64(length(x))
-	iflag = int64(3)    # reorder all vectors
+	N = Int64(length(x))
+	iflag = Int64(3)    # reorder all vectors
 	p = zeros(Int64, N) # permutation array
 	ccall((:reordr_, lib624), 
 	        Ptr{Void}, 
@@ -12,7 +12,7 @@ end
 
 function trmesh(x::Vector{Float64}, y::Vector{Float64})
 	length(x) == length(y) || error("input vectors must be same size")
-	N = int64(length(x))
+	N = Int64(length(x))
 	iadj = zeros(Int64, 6*N-9)
 	iend = zeros(Int64, N)
 	ier = Int64[3]
@@ -38,7 +38,7 @@ function gradg!(x::Vector{Float64},
 			    eps::Float64)
 	length(x) == length(y) == length(z) || error("input vectors must be same size")
 	size(zxzy) == (2, length(x)) || error("wrong dimension on input zxzy")
-	N = int64(length(x))
+	N = Int64(length(x))
 	ier = Int64[3]  # init to unused code
 	ccall((:gradg_, lib624), 
       	  Ptr{Void}, 
@@ -52,7 +52,7 @@ function gradg!(x::Vector{Float64},
       	   Ptr{Int64},   # nit
 		   Ptr{Float64}, # zxzy
       	   Ptr{Int64}),  # ier
-      	   &N, x, y, z, iadj, iend, &eps, &int64(nit), zxzy, ier)
+      	   &N, x, y, z, iadj, iend, &eps, &Int64(nit), zxzy, ier)
 	ier[1] == 1 && warn("desired gradient convergence not reached in $nit iterations")
 	ier[1] == 2 && error("eps or nit lower than zero, or N lower than 3")
 	return zxzy
@@ -68,7 +68,7 @@ function gradl!(x::Vector{Float64},
 			    zxzy::Matrix{Float64})
 	length(x) == length(y) == length(z) || error("input vectors must be same size")
 	size(zxzy) == (2, length(x)) || error("wrong dimension on input zxzy")
-	N = int64(length(x))
+	N = Int64(length(x))
 	ier = Int64[3]  # init to unused code
 	dx = Float64[0.0]
 	dy = Float64[0.0]
@@ -118,7 +118,7 @@ function intrc1!(xi::Float64, yi::Float64,
 		  Ptr{Int64},   # ist
 		  Ptr{Float64}, # pz
 		  Ptr{Int64}),  # ier
-		  &(int64(length(x))), &xi, &yi, x, y, z, iadj, iend, &int64(1), zxzy, ist, ztmp, ier)
+		  &(Int64(length(x))), &xi, &yi, x, y, z, iadj, iend, &Int64(1), zxzy, ist, ztmp, ier)
 	#ier[1] ==  1 && warn("extrapolating out of convex hull of data")
 	ier[1] == -1 && error("N, iflag orr ist out of range")
 	ier[1] == -2 && error("nodes are collinear")
@@ -161,7 +161,7 @@ function intrc0!(xi::Float64, yi::Float64,
 		  Ptr{Int64},   # ist
 		  Ptr{Float64}, # pztmp
 		  Ptr{Int64}),  # ier
-		  &(int64(length(x))), &xi, &yi, x, y, z, iadj, iend, ist, ztmp, ier)
+		  &(Int64(length(x))), &xi, &yi, x, y, z, iadj, iend, ist, ztmp, ier)
 	#ier[1] ==  1 && warn("extrapolating out of convex hull of data")
 	ier[1] == -1 && error("N, iflag orr ist out of range")
 	ier[1] == -2 && error("nodes are collinear")

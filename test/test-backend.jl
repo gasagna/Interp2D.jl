@@ -4,8 +4,8 @@ import Interp2D: reordr!, trmesh, gradg, intrc1!
 # generate dummy data
 srand(1)
 N = 200
-x = float64(rand(N))
-y = float64(rand(N))
+x = rand(N)
+y = rand(N)
 
 # simple function with known gradient
 z = 2*x + 3*y
